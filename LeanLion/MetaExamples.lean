@@ -44,3 +44,54 @@ macro_rules
 
 #eval [x * x for# x in [1, 2, 3, 4, 5]]
 #eval [x * x for# x in l for# l in [[1, 5, 2], [3, 4, 5]]]
+
+def docStringM? (name: Name) : CoreM (Option String) := do
+  let env ← getEnv
+  findDocString? env name
+
+#eval docStringM? ``List.filterMap
+
+def constantsWithList : CoreM (List Name) := do
+  let env ← getEnv
+  let m := env.constants.map₁
+  let names := m.toList.map (·.1)
+  let names := names.filter (``List).isPrefixOf
+  return names
+
+#eval constantsWithList
+
+partial def identifiersOfSyntax (stx: Syntax) : List Name :=
+  match stx with
+  | .ident _ _ name .. => [name]
+  | .node _ _ args .. => args.foldl (init := []) fun acc arg => acc ++ identifiersOfSyntax arg
+  | _ => []
+
+open PrettyPrinter Delaborator
+
+def identifiersFromName (name: Name) : MetaM (List Name) := do
+  let env ← getEnv
+  let info? := env.find? name
+  let expr? := match info? with
+    | some (.defnInfo dfn) =>
+        some dfn.value
+    | _ => none
+  let stx ← delab expr?.get!
+  let m := env.constants.map₁
+  let names := m.toList.map (·.1)
+  let ids := identifiersOfSyntax stx
+  return ids.filter (names.contains)
+
+#eval identifiersFromName ``List.filterMap
+
+elab "fn" a:ident "::" t:term "|->" b:term : term => do
+  let type ← elabType t
+  let name := a.getId
+  withLocalDecl name BinderInfo.default type fun x => do
+    let body ← elabTerm b none
+    mkLambdaFVars #[x] body
+
+#check mkIdent
+
+def f := fn a :: Nat |-> a + 1
+
+#eval f 3
