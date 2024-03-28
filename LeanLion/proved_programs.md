@@ -6,13 +6,13 @@ theme: default
 
 # Lean as a Programming Language
 
-Lean is a dependently typed, _functional_* programming language:
+Lean is a _dependently typed_, _functional_ programming language:
 
 * Lean's type system is rich enough to express arbitrary mathematical theorems;
 * Lean has a fast runtime, good enough that Lean is *self-hosting*;
 * A powerful tactic system allows for *interactive theorem proving*;
 * The meta-programming system is powerful and convenient.
-* Proving, programming, and meta-programming are all seamlessly integrated.
+* Proving, programming and meta-programming are all seamlessly integrated.
 
 ---
 
@@ -35,6 +35,29 @@ Lean is a dependently typed, _functional_* programming language:
 * Lean's type constructors are rich enough to express arbitrary mathematical theorems.
 * Propositions are types, and proofs are terms of these types.
 * Proofs are erased at runtime, so there is no performance penalty for proving theorems.
+
+---
+
+## SATurn: A SAT Solver-Prover in Lean
+
+* The Boolean satisfiability problem (SAT) is the problem of determining if a given collection of Boolean formulas is satisfiable.
+* SATurn is an implementation in Lean of the DPLL algorithm for SAT solving.
+* Given a SAT problem, SATurn returns one of:
+  * A proof that the problem is not satisfiable: a *resolution tree* is returned, and it is proved that such trees are proofs of unsatisfiability.
+  * A satisfying assignment to the variables and proof that they are correct.
+* The _n-queens_ problem illustrates SATurn.
+
+--- 
+
+## LeanAide: Autoformalization of Statements
+
+Given a statement, LeanAide generates a Lean formalization of the statement.
+
+* We find documentation strings (in Mathlib, Std, Core) that are similar (w.r.t. OpenAI's embeddings) to the statement.
+* From these, a prompt with example translations and the given statement is generated.
+* GPT-4 is queried with the prompt, with (say) 10 completions sought.
+* We elaborate the OpenAI completions in Lean and filter out those that fail.
+* We further group these by *provable equivalence*, where we try to prove equivalence using the Aesop tactic and pick the first completion in the largest group.
 
 ---
 
@@ -66,4 +89,15 @@ From Wikipedia:
 * **Meta:** Expressions can use meta-variables as placeholders, with expressions assigned to them later. Definitions cannot have unassigned meta-variables.
 * **TermElab:** We can define new syntax, together with functions transforming the new syntax to kernel expressions.
 * **Tactic:** Tactics are functions that construct an expression of a *target* type and assign it to the *goal* meta-variable. The expression may depend on other meta-variables, which then become new goals.
-* The **Infoview** is a rich source of data.
+* The **Infoview** is also a rich source of data.
+
+---
+
+## Data from LeanAide
+
+* Documentation strings.
+* Premises used in proofs of results.
+* Composite terms in proofs.
+* Lemmas used: any proposition that is the type of some sub-expression of a proof term.
+* Premises and composite terms in proofs of lemmas.
+* We have about 10 million theorem-lemma pairs, where theorems include lemmas in proofs as above.
