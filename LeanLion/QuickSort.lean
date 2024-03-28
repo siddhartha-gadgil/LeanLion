@@ -18,10 +18,10 @@ namespace Quicksort
 
 variable {α : Type}[LinearOrder α]
 
-def smaller (pivot : α) (l : List α) : List α :=
+abbrev smaller (pivot : α) (l : List α) : List α :=
   l.filter (fun x => x ≤  pivot)
 
-def larger (pivot : α) (l : List α) : List α :=
+abbrev larger (pivot : α) (l : List α) : List α :=
   l.filter (fun x => x > pivot)
 
 def quickSort : List α → List α
@@ -52,20 +52,19 @@ theorem mem_iff_below_or_above_pivot (pivot : α) (l : List α)(x : α) :
   · intro h
     by_cases h' : x ≤ pivot
     · left
-      apply List.mem_filter_of_mem h
-      simp
-      assumption
+      rw [List.mem_filter]
+      simp [h, h']
     · right
-      apply List.mem_filter_of_mem h
-      simp
-      apply lt_of_not_ge
-      assumption
+      rw [List.mem_filter]
+      simp [h, h', lt_of_not_ge h']
   · intro h
     cases h
     case mpr.inl h' =>
-      exact List.mem_of_mem_filter h'
+      rw[List.mem_filter] at h'
+      exact h'.left
     case mpr.inr h' =>
-      exact List.mem_of_mem_filter h'
+      rw[List.mem_filter] at h'
+      exact h'.left
 
 theorem mem_iff_mem_quickSort (l: List α)(x : α) :
     x ∈ l ↔ x ∈ quickSort l := by
@@ -150,26 +149,26 @@ theorem quickSort_sorted (l : List α) : Sorted (quickSort l) := by
     · intro x
       rw [← mem_iff_mem_quickSort]
       intro h
-      let lem := List.of_mem_filter h
-      simp at lem
-      assumption
+      rw[List.mem_filter] at h
+      simp at h
+      exact h.right
     · simp
       intro x
       rw [← mem_iff_mem_quickSort]
       intro h
-      let lem := List.of_mem_filter h
-      simp at lem
+      rw [List.mem_filter] at h
+      simp at h
       apply le_of_lt
-      assumption
+      exact h.right
     · assumption
     · apply append_sorted pivot [pivot] (quickSort (larger pivot l))
       · simp
       · intro x h
         rw [← mem_iff_mem_quickSort] at h
-        let lem := List.of_mem_filter h
-        simp at lem
+        rw[List.mem_filter] at h
+        simp at h
         apply le_of_lt
-        assumption
+        exact h.right
       · apply Sorted.singleton
       · assumption
 termination_by l.length
