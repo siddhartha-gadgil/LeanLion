@@ -58,13 +58,13 @@ theorem mem_iff_below_or_above_pivot (pivot : α) (l : List α)(x : α) :
       rw [List.mem_filter]
       simp [h, h', lt_of_not_ge h']
   · intro h
-    cases h
-    case mpr.inl h' =>
-      rw[List.mem_filter] at h'
-      exact h'.left
-    case mpr.inr h' =>
-      rw[List.mem_filter] at h'
-      exact h'.left
+    cases h with
+    | inl h =>
+      rw [List.mem_filter] at h
+      exact h.left
+    | inr h =>
+      rw[List.mem_filter] at h
+      exact h.left
 
 theorem mem_iff_mem_quickSort (l: List α)(x : α) :
     x ∈ l ↔ x ∈ quickSort l := by
@@ -85,7 +85,7 @@ theorem mem_iff_mem_quickSort (l: List α)(x : α) :
     let ihb := mem_iff_mem_quickSort (smaller pivot l)
     let iha := mem_iff_mem_quickSort (larger pivot l)
     rw [← ihb, ← iha]
-    aesop
+    tauto
 termination_by l.length
 
 inductive Sorted : List α → Prop
