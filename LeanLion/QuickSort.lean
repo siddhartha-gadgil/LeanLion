@@ -12,6 +12,8 @@ Our implementation of quicksort for lists follows the following steps:
 * Otherwise, let `pivot` be the first element (`head`) of the list.
 * Let `smaller` be the list of elements smaller (`≤`) than `pivot` and `larger` be the list of elements larger (`>`) than `pivot`.
 * Recursively sort `smaller` and `larger` lists and concatenate them with `pivot` in between.
+
+We begin by defining `smaller` and `larger` lists. We define them as abbreviations so that they are automatically unfolded by Lean.
 -/
 
 namespace Quicksort

@@ -41,7 +41,7 @@ Lean is a _dependently typed_, _functional_ programming language:
 ## SATurn: A SAT Solver-Prover in Lean
 
 * The Boolean satisfiability problem (SAT) is the problem of determining if a given collection of Boolean formulas is satisfiable.
-* SATurn is an implementation in Lean of the DPLL algorithm for SAT solving.
+* [SATurn](https://github.com/siddhartha-gadgil/Saturn) is an implementation in Lean of the DPLL algorithm for SAT solving.
 * Given a SAT problem, SATurn returns one of:
   * A proof that the problem is not satisfiable: a *resolution tree* is returned, and it is proved that such trees are proofs of unsatisfiability.
   * A satisfying assignment to the variables and proof that they are correct.
@@ -51,7 +51,7 @@ Lean is a _dependently typed_, _functional_ programming language:
 
 ## LeanAide: Autoformalization of Statements
 
-Given a statement, LeanAide generates a Lean formalization of the statement.
+Given a statement, [LeanAide](https://github.com/siddhartha-gadgil/LeanAide) generates a Lean formalization of the statement.
 
 * We find documentation strings (in Mathlib, Std, Core) that are similar (w.r.t. OpenAI's embeddings) to the statement.
 * From these, a prompt with example translations and the given statement is generated.
