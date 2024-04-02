@@ -26,3 +26,10 @@ example : sillyN ≤ 7 := by sorry
 We do not continue within `case` and `match` blocks. So there is an alternative way to use `byy` in the following example.
 -/
 example (n : Nat) : n/2 ≤ n := by sorry
+
+/-!
+We can add a tactic as an auto-tactic
+-/
+#auto simp [silly]
+
+example : sillyN ≤ 3 := by sorry
