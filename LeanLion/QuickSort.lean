@@ -40,9 +40,11 @@ def quickSort : List α → List α
     (quickSort (smaller pivot l)) ++ pivot :: (quickSort (larger pivot l))
 termination_by l => l.length
 
+@[simp]
 theorem quickSort_nil : quickSort ([] : List α) = [] := by
   rfl
 
+@[simp]
 theorem quickSort_cons (pivot : α) (l : List α) :
     quickSort (pivot :: l) = (quickSort (smaller pivot l)) ++
     pivot :: (quickSort (larger pivot l)) := by
@@ -72,9 +74,9 @@ theorem mem_iff_mem_quickSort (l: List α)(x : α) :
     x ∈ l ↔ x ∈ quickSort l := by
   cases l with
   | nil =>
-    simp [quickSort_nil]
+    simp
   | cons pivot l =>
-    simp [quickSort_cons]
+    simp
     rw [mem_iff_below_or_above_pivot pivot]
     have : (smaller pivot l).length < (pivot :: l).length := by
       simp [List.length_cons]
