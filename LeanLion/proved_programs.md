@@ -56,7 +56,7 @@ Given a statement, [LeanAide](https://github.com/siddhartha-gadgil/LeanAide) gen
 * We find documentation strings (in Mathlib, Std, Core) that are similar (w.r.t. OpenAI's embeddings) to the statement.
 * From these, a prompt with example translations and the given statement is generated.
 * GPT-4 is queried with the prompt, with (say) 10 completions sought.
-* We elaborate the OpenAI completions in Lean and filter out those that fail.
+* We elaborate OpenAI completions in Lean and filter out those that fail.
 * We further group these by *provable equivalence*, where we try to prove equivalence using the Aesop tactic and pick the first completion in the largest group.
 
 ---
@@ -77,7 +77,7 @@ From Wikipedia:
 * The **source** code of Lean programs, commands, and terms is strings, which are *linear sequences of characters.*
 * **Parsers** convert source code into `Syntax` **trees**.
 * **Elaborators** convert syntax trees into `Expr`'s: type-correct kernel **expressions** that are *terms in the foundations of the Lean language.*
-* `Expr` and `Syntax` are both types, so *syntax* and *kernel _expressions_ are **terms** (first-class citizens) in Lean.
+* `Expr` and `Syntax` are both types, so *syntax* and _kernel expressions_ are **terms** (first-class citizens) in Lean.
 * Lean uses parser-combinators: parsers can use the results of parsing parts of the input.
 * The syntax is extensible: new syntax and even new *kind*s of syntax can be added.
 * *Delaborators* convert `Expr`s back into syntax trees, and *pretty-printers* convert syntax trees back into source code.
