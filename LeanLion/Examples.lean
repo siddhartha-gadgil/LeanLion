@@ -19,7 +19,7 @@ example : sillyN ≤ 3 := by sorry
 /-!
 We now show that stuff keeps running in the background
 -/
-set_option aided_by.delay 0 in
+set_option leanaide.auto_tactic.delay 0 in
 example : sillyN ≤ 7 := by sorry
 
 /-!
@@ -30,6 +30,6 @@ example (n : Nat) : n/2 ≤ n := by sorry
 /-!
 We can add a tactic as an auto-tactic
 -/
-#auto simp [silly]
+-- #auto simp [silly]
 
 example : sillyN ≤ 3 := by sorry
