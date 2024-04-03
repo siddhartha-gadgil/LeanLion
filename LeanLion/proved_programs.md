@@ -61,6 +61,14 @@ Given a statement, [LeanAide](https://github.com/siddhartha-gadgil/LeanAide) gen
 
 ---
 
+## LeanAideTools: Running tactics in the background
+
+* Often tactics like `exact?`, `aesop`, `simp`, `norm_num` can finish a goal.
+* It is a nuisance to run these tactics manually every time.
+* Using **meta-programming** and **concurrency** using `Task` supported by Lean, we implement a tool that runs chosen tactics in the background.
+
+---
+
 ## Meta-programming
 
 From Wikipedia:
