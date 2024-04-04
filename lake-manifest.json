@@ -67,7 +67,7 @@
   {"url": "https://github.com/siddhartha-gadgil/LeanAideTools.git",
    "type": "git",
    "subDir": null,
-   "rev": "3231a1d989c93ff09019ebee3a515f7b6c2e7af7",
+   "rev": "e53824bf05dccc9f1bcbb9ff8a5ffe079dd8c4b5",
    "name": "LeanAideTools",
    "manifestFile": "lake-manifest.json",
    "inputRev": "v4.7.0-rc2",

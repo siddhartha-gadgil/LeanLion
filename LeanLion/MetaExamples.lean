@@ -60,10 +60,10 @@ def constantsWithList : CoreM (List Name) := do
 
 #eval constantsWithList
 
-partial def identifiersOfSyntax (stx: Syntax) : List Name :=
+partial def identifiersFromSyntax (stx: Syntax) : List Name :=
   match stx with
   | .ident _ _ name .. => [name]
-  | .node _ _ args .. => args.foldl (init := []) fun acc arg => acc ++ identifiersOfSyntax arg
+  | .node _ _ args .. => args.foldl (init := []) fun acc arg => acc ++ identifiersFromSyntax arg
   | _ => []
 
 open PrettyPrinter Delaborator
@@ -78,7 +78,7 @@ def identifiersFromName (name: Name) : MetaM (List Name) := do
   let stx ← delab expr?.get!
   let m := env.constants.map₁
   let names := m.toList.map (·.1)
-  let ids := identifiersOfSyntax stx
+  let ids := identifiersFromSyntax stx
   return ids.filter (names.contains)
 
 #eval identifiersFromName ``List.filterMap
