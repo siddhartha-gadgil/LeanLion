@@ -18,3 +18,6 @@ require LeanAideTools from git
 @[default_target]
 lean_lib «LeanLion» where
   -- add any library configuration options here
+
+@[default_target]
+lean_exe quicksort where
