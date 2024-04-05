@@ -8,7 +8,7 @@ def main (args: List String) : IO Unit := do
 
   IO.println s!"Sorting random list of size {n} with max value {m}"
   let start ← IO.monoMsNow
-  let sortedList :=  l -- Do the sorting here
+  let sortedList := Quicksort.quickSort  l
   let done ← IO.monoMsNow
   IO.println s!"Time for sorting: {done - start}ms"
   IO.println s!"Done: got {sortedList.length} elements. First 10: {sortedList.take 10}"
