@@ -17,8 +17,6 @@ We begin by defining `smaller` and `larger` lists. We define them as abbreviatio
 -/
 
 
-
-
 /-!
 We define `smaller` and `larger` using `List.filter`. We need some theorems relating to filtering.
 -/

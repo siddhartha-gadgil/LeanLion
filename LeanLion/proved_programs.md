@@ -3,8 +3,11 @@ marp: true
 theme: default
 ---
 
+# Overview of Proved Programs
 
-# Lean as a Programming Language
+---
+
+## Lean as a Programming Language
 
 Lean is a _dependently typed_, _functional_ programming language:
 
@@ -47,7 +50,11 @@ Lean is a _dependently typed_, _functional_ programming language:
   * A satisfying assignment to the variables and proof that they are correct.
 * The _n-queens_ problem illustrates SATurn.
 
---- 
+---
+ 
+# SATurn demo
+
+---
 
 ## LeanAide: Autoformalization of Statements
 
@@ -61,6 +68,10 @@ Given a statement, [LeanAide](https://github.com/siddhartha-gadgil/LeanAide) gen
 
 ---
 
+# LeanAide demo
+
+---
+
 ## LeanAideTools: Running tactics in the background
 
 * Often tactics like `exact?`, `aesop`, `simp`, `norm_num` can finish a goal.
@@ -68,6 +79,15 @@ Given a statement, [LeanAide](https://github.com/siddhartha-gadgil/LeanAide) gen
 * Using **meta-programming** and **concurrency** using `Task` supported by Lean, we implement a tool that runs chosen tactics in the background.
 
 ---
+
+# LeanAideTools demo
+
+---
+
+# Programming example: Quicksort
+
+---
+
 
 ## Meta-programming
 
@@ -109,3 +129,7 @@ From Wikipedia:
 * Lemmas used: any proposition that is the type of some sub-expression of a proof term.
 * Premises and composite terms in proofs of lemmas.
 * We have about 10 million theorem-lemma pairs, where theorems include lemmas in proofs as above.
+
+---
+
+# Meta-programming examples
