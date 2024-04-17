@@ -2,8 +2,7 @@
 marp: true
 theme: default
 ---
-
-# Overview of Proved Programs
+# Programs with Proofs & Meta-programs in Lean
 
 ---
 
