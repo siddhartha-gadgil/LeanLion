@@ -47,11 +47,11 @@ Lean is a _dependently typed_, _functional_ programming language:
 * Given a SAT problem, SATurn returns one of:
   * A proof that the problem is not satisfiable: a *resolution tree* is returned, and it is proved that such trees are proofs of unsatisfiability.
   * A satisfying assignment to the variables and proof that they are correct.
-* The _n-queens_ problem illustrates SATurn.
+* Remarkably, SATurn ran correctly as soon as it compiled.
 
 ---
  
-# SATurn demo
+# SATurn demo: $n$-queens etc.
 
 ---
 
