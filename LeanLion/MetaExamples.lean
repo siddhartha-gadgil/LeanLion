@@ -7,6 +7,99 @@ Lean has a powerful meta-programming framework that allows you to write programs
 -/
 
 /-!
+## Getting bitten by multiple instances
+
+The first example is inspired by conversations from this workshop. One of the annoying and mysterious errors is when two instances of the same typeclass are used in a term.
+-/
+instance Collapse : HAdd String String String where
+  hAdd := String.append
+
+def collapse (a b: String): String :=
+  @HAdd.hAdd String String String Collapse a b
+
+instance Collapse' : HAdd String String String where
+  hAdd := fun a b => a ++ " " ++ b
+
+def collapse' (a b: String): String :=
+  @HAdd.hAdd String String String Collapse' a b
+
+
+example (a b  : String) : collapse' a b = collapse a b := by
+  unfold collapse collapse'
+  -- rfl
+  sorry
+
+/-!
+We write code to check if two instances of the same typeclass are used in a term.
+-/
+def clashInstances (a b : Expr) : MetaM Bool := do
+  let aType ← inferType a
+  let bType ← inferType b
+  match ((← isClass? aType), (← isClass? bType)) with
+  | (some x, some y) =>
+    if (x = y) && (← isDefEq aType  bType) then
+        let instancesEqual ← isDefEq a b
+        return !instancesEqual
+      else
+        return false
+  | _ =>
+    return false
+
+open Term
+elab "check_clashes" a:term "with" b:term : term => do
+  let a ← elabTerm a none
+  let b ← elabTerm b none
+  let res ← clashInstances a b
+  return toExpr res
+
+#eval check_clashes Collapse with Collapse' -- true
+#eval check_clashes Collapse with Collapse -- false
+#eval check_clashes 1 with 2 -- false
+
+/-!
+## Subexpressions
+
+Our next step is to extract all subexpressions of a given expression.
+-/
+def subExprs : Expr →  List Expr
+| .app f a => subExprs f ++ subExprs a
+| .lam _ d b _ => subExprs d ++ subExprs b
+| .forallE _ d b _ => subExprs d ++ subExprs b
+| .letE _ t v b _ => subExprs t ++ subExprs v ++ subExprs b
+| .lit e => [.lit e]
+| .const n l => [.const n l]
+| _ => []
+
+
+elab "sub_exprs" e:term : term => do
+  let e ← elabTerm e none
+  let res := subExprs e
+  let subs ← res.mapM fun e => do
+    let fmt ← ppExpr e
+    pure fmt.pretty
+  return toExpr subs.eraseDups
+
+#eval sub_exprs fun (n : Nat) ↦ (1 + n) * 3
+
+open Lean.Elab.Tactic
+elab "check_clashes" : tactic => do
+  withMainContext do
+    let goal ← getMainTarget
+    let subExprs := subExprs goal
+    for e in subExprs do
+      for e' in subExprs do
+        let res ← clashInstances e e'
+        if res then
+          let type ← inferType e
+          logError m!"Clash found: `{← ppExpr e}` and `{← ppExpr e'}` are instances of the same typeclass `{← ppExpr type}` with different instances."
+          throwAbortTactic
+  return ()
+
+-- example (a b  : String) : collapse' a b = collapse a b := by
+--   unfold collapse collapse'
+--   check_clashes
+
+/-!
 The first layer of meta-programming is `Core`, where we can access and modify the environment.
 -/
 #check findDocString? -- Lean.findDocString? (env : Environment) (declName : Name) (includeBuiltin : Bool := true) : IO (Option String)

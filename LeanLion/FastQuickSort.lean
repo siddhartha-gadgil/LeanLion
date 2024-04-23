@@ -13,7 +13,7 @@ partial def quickSort (arr : Array α) : Array α :=
 
 partial def quickSortTask (arr : Array α)(depth : Nat) : Task (Array α) :=
   match depth with
-  | 0 => Task.pure (quickSort arr)
+  | 0 => Task.spawn fun _ => (quickSort arr)
   | n + 1 =>
     let pivot := arr.get! (arr.size / 2)
     let left := (arr.eraseIdx (arr.size / 2)).filter (fun x => x < pivot)
