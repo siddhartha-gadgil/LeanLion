@@ -5,7 +5,7 @@ import LeanAideTools
 First we see in a simple example
 -/
 
-example : 1 ≤ 2 := by sorry
+example : 1 ≤ 2 := by omega
 
 /-!
 We next illustrate the use of the `byy` tactic where the proof cannot be found straightaway.
@@ -14,18 +14,23 @@ We next illustrate the use of the `byy` tactic where the proof cannot be found s
 opaque sillyN : Nat
 axiom silly : sillyN = 2
 
-example : sillyN ≤ 3 := by sorry
+example : sillyN ≤ 3 := byy
+  rw [silly]
 
 /-!
 We now show that stuff keeps running in the background
 -/
 set_option leanaide.auto_tactic.delay 0 in
-example : sillyN ≤ 7 := by sorry
+example : sillyN ≤ 7 := by
+  rw [silly]
+  omega
+
 
 /-!
 We do not continue within `case` and `match` blocks. So there is an alternative way to use `byy` in the following example.
 -/
-example (n : Nat) : n/2 ≤ n := by sorry
+example (n : Nat) : n/2 ≤ n := by
+  doo
 
 /-!
 We can add a tactic as an auto-tactic
