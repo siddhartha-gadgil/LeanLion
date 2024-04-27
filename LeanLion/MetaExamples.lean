@@ -139,6 +139,8 @@ def identifiersFromName (name: Name) : MetaM (List Name) := do
   let expr? := match info? with
     | some (.defnInfo dfn) =>
         some dfn.value
+    | some (.thmInfo dfn) =>
+        some dfn.value
     | _ => none
   let stx ← delab expr?.get!
   let m := env.constants.map₁
@@ -146,7 +148,36 @@ def identifiersFromName (name: Name) : MetaM (List Name) := do
   let ids := identifiersFromSyntax stx
   return ids.filter (names.contains)
 
-#eval identifiersFromName ``List.filterMap
+def getCtors (name: Name) : MetaM (List Name) := do
+  let env ← getEnv
+  let info? := env.find? name
+  match info? with
+  | some (.inductInfo ind) =>
+    return ind.ctors
+  | _ => throwError "Not an inductive type"
+
+#eval getCtors ``Expr
+#eval getCtors ``ConstantInfo
+
+#check ConstantInfo.rec
+
+#check @Nat.rec (motive := fun _ => String)
+
+def fct (n: Nat) : Nat :=
+match n with
+| 0 => 1
+| n + 1 => (n + 1) * (fct n)
+
+#eval fct 5
+
+noncomputable def fct' : Nat → Nat :=
+  Nat.rec 1 (fun n val => (n + 1) * val)
+
+example : fct' 0 = 1 := rfl
+example (n: Nat) : fct' (Nat.succ n) =
+        (n + 1) * (fct' n) := rfl
+
+#eval identifiersFromName ``Nat.le_of_succ_le_succ
 
 elab "fn" a:ident "::" t:term "|->" b:term : term => do
   let type ← elabType t
