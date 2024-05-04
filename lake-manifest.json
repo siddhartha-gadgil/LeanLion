@@ -70,7 +70,7 @@
    "rev": "30a3a6719400cffe5d20d3c532c26613ebfb9208",
    "name": "LeanAideTools",
    "manifestFile": "lake-manifest.json",
-   "inputRev": "main",
+   "inputRev": "v4.7.0",
    "inherited": false,
    "configFile": "lakefile.lean"}],
  "name": "LeanLion",
