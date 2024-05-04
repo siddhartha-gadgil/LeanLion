@@ -16,14 +16,14 @@ axiom silly : sillyN = 2
 
 example : sillyN ≤ 3 := byy
   rw [silly]
+  omega
 
 /-!
 We now show that stuff keeps running in the background
 -/
-set_option leanaide.auto_tactic.delay 0 in
-example : sillyN ≤ 7 := by
-  rw [silly]
-  omega
+-- set_option leanaide.auto_tactic.delay 0 in
+-- example : sillyN ≤ 7 := byy
+--   rw [silly]
 
 
 /-!
@@ -38,3 +38,5 @@ We can add a tactic as an auto-tactic
 -- #auto simp [silly]
 
 example : sillyN ≤ 3 := by sorry
+
+#leanaide_search "There are infinitely many primes" ;

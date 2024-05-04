@@ -13,7 +13,7 @@ require mathlib from git
   "https://github.com/leanprover-community/mathlib4.git" @ "v4.7.0"
 
 require LeanAideTools from git
-  "https://github.com/siddhartha-gadgil/LeanAideTools.git" @ "v4.7.0"
+  "https://github.com/siddhartha-gadgil/LeanAideTools.git" @ "main"
 
 @[default_target]
 lean_lib «LeanLion» where
