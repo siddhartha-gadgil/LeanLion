@@ -1,4 +1,6 @@
 import Mathlib
+import LeanAideTools
+import LeanAideTools.AsyncMode
 #check Array.eraseIdx
 
 variable {α : Type}[LinearOrder α][Inhabited α]
@@ -25,3 +27,5 @@ partial def quickSortTask (arr : Array α)(depth : Nat) : Task (Array α) :=
 
 partial def quickSortAsync (arr : Array α)(depth : Nat) : Array α :=
   (quickSortTask arr depth).get
+
+#fail_tactic slim_check
