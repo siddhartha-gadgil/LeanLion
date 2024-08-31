@@ -75,6 +75,9 @@ theorem mem_iff_below_or_above_pivot (pivot : α) (l : List α)(x : α) :
       rw[List.mem_filter] at h
       exact h.left
 
+#print mem_iff_below_or_above_pivot
+#check propext
+
 theorem mem_iff_mem_quickSort (l: List α)(x : α) :
     x ∈ l ↔ x ∈ quickSort l := by
   cases l with

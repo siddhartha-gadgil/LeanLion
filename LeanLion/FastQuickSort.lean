@@ -3,6 +3,12 @@ import LeanAideTools
 import LeanAideTools.AsyncMode
 #check Array.eraseIdx
 
+-- example (n: Nat)(h : Nat.Prime n) : n + 1 ≤ 30 := by slim_check
+-- example (n: Nat)(h : Nat.Prime n) : n % 2 = 1 := by slim_check
+-- example (n: Nat)(h : Nat.Prime n) : n + 1 ≤ 300 :=
+--   by slim_check (config := {maxSize := 1000, numInst := 1000})
+
+
 variable {α : Type}[LinearOrder α][Inhabited α]
 
 partial def quickSort (arr : Array α) : Array α :=
