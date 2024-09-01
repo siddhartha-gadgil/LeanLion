@@ -15,8 +15,8 @@ elab "#expr" t:term : command =>
 /-!
 # Meta-programming for Tactics
 
-* **Metaprogramming* is writing funtions and programs that *work with* programs or their components.
-  - We can generate, analyse or modify code representing programs, terms, commands, tactis etc.
+* **Metaprogramming* is writing functions and programs that *work with* programs or their components.
+  - We can generate, analyse or modify code representing programs, terms, commands, tactics etc.
 * In principle this can be done by manipulating the text source code, but this is hard and brittle.
 * Instead, we work with *internal representations* of code.
 * In Lean, this is at two levels: `Syntax` and `Expr`.
@@ -29,8 +29,10 @@ elab "#expr" t:term : command =>
   * **Parsing** - the text is converted into a `Syntax` tree. This could represent a term, a tactic, a command, an identifier etc.
   * **Elaboration** - the `Syntax` tree for a *term* is converted into an `Expr` tree. This is the internal representation in the foundations of Lean. We also elaborate *commands*.
 -/
-#stx 2 + 4
-#expr (2 : Nat) + 4
+#stx (2 + 4)
+#expr ((2 : Nat) + 4)
+#stx (Nat → Nat)
+#expr (Nat → Nat)
 
 /-!
 ## Metaprogramming with Syntax
@@ -38,7 +40,7 @@ elab "#expr" t:term : command =>
 * The syntax of Lean is extensible.
 * We can create new syntax, and even new syntax categories.
 * A `macro` is a function that takes a `Syntax` object and returns a `Syntax` object.
-* Macros are applied recursively to the syntax tree. The result should be previously valid syntax.
+* Macros are applied recursively to the syntax tree. The result should be syntax that can be elaborated (without expanding with the newly written macro).
 -/
 
 example : 2 ≤ 4 := by
