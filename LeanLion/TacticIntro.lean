@@ -15,8 +15,8 @@ elab "#expr" t:term : command =>
 /-!
 # Meta-programming for Tactics
 
-* **Metaprogramming* is writing functions and programs that *work with* programs or their components.
-  - We can generate, analyse or modify code representing programs, terms, commands, tactics etc.
+* **Metaprogramming** is writing functions and programs that *work with* programs or their components.
+  - We can *generate*, *analyse* or *modify* code representing *programs*, *terms*, *commands*, *tactics* etc.
 * In principle this can be done by manipulating the text source code, but this is hard and brittle.
 * Instead, we work with *internal representations* of code.
 * In Lean, this is at two levels: `Syntax` and `Expr`.
@@ -49,6 +49,8 @@ example : 2 ≤ 4 := by
   apply Nat.le_refl
 
 example : 2 ≤ 4 := by
+  repeat (apply Nat.le_step)
+  sorry
   repeat (first|apply Nat.le_refl|apply Nat.le_step)
 
 macro "nat_le" : tactic => do
@@ -81,14 +83,15 @@ theorem eg₁ : 2 ≤ 4 := by
 ## State Monads
 
 * If `BlahM` is a *state monad* with state `Blah.State`, then a term of type `BlahM α` corresponds to:
-  - Given an initial state in `Blah.State`
-  - Returns a value of type `α`
+  - given an initial state in `Blah.State`
+  - return a value of type `α`
   - and a final state in `Blah.State`.
 * Thus, this is essentially a function `Blah.State → α × Blah.State`.
 * The monadic structure and `do` notation allow us to
-  - Compose in a convenient way.
+  - Compose in a convenient way (with the updated state passed automatically).
   - Automatically handle the state.
-* A term of type `α` can be turned into a term of type `BlahM α` by using `pure α: s ↦ (α, s)`, i.e., ignoring and fixing the state (`return` is roughly a synonym for pure).
+* A term of type `α` can be turned into a term of type `BlahM α` by using `pure α: s ↦ (α, s)`, i.e., ignoring and fixing the state
+* `return x` is roughly a synonym for `pure x`.
 * In general, given a type `s` (the state), we have a state monad `State s α`
 
 ## The Monad `TacticM`
@@ -97,15 +100,19 @@ theorem eg₁ : 2 ≤ 4 := by
 * Hence, a term of type `TacticM Unit` is a function that:
   - Given a `Tactic.State` (the tactic state)
   - Returns a value of type `Unit`: the unique value of type `Unit`.
-  - and a new `Tactic.State`.
+  - And a new `Tactic.State`.
 * Thus, a tactis is a function that takes a tactic state and returns a new tactic state.
 
 ## More on `TacticM`
 
 * We in fact have a hierarchy of Monads, `CoreM`, `MetaM`, `TermElabM`, `TacticM`.
-* So, to the next approximation, `TacticM α = State Tactic.State (TermElabM α)`, `TermElabM α = State Term.State (MetaM α)` etc.
+* So, to the next level of approximation,
+  - `TacticM α = State Tactic.State (TermElabM α)`,
+  - `TermElabM α = State Term.State (MetaM α)`
+  - `MetaM α = State Meta.State (CoreM α)`
+  - etc.
 * A term in a lower monad can be lifted to a higher monad using compositions of `pure`.
-* Actually all these monads are state monads equipped with a `ReaderT`, which means they also have a **read-only `Context`**.
+* Actually all these monads are `State` monads equipped with a `ReaderT`, which means they also have a **read-only `Context`**.
 * There are a few other subtleties which we can ignore for now.
 
 ## First examples
@@ -134,6 +141,9 @@ example : 3 ≤ 5 := by
 
 We write a tactic to plug in various natural numbers into `use` until the tactic followed by another succeeds.
 -/
+example : ∃ n: Nat, n * n = 64 := by
+  use 8
+
 elab "use_till" n:num "then" tac:tacticSeq : tactic => withMainContext do
   let n := n.getNat
   let s ← saveState
@@ -211,14 +221,14 @@ elab "rw_le" t:term : tactic => withMainContext do
       let trans ← mkAppM ``Nat.le_trans #[e, ineq]
       let goal ← getMainGoal
       goal.assign trans
-      setGoals [ineq.mvarId!]
+      replaceMainGoal [ineq.mvarId!]
     else
     if right_match then
       let ineq ← mkFreshExprMVar <| ← mkAppM ``Nat.le #[a₂, a₁]
       let trans ← mkAppM ``Nat.le_trans #[ineq, e]
       let goal ← getMainGoal
       goal.assign trans
-      setGoals [ineq.mvarId!]
+      replaceMainGoal [ineq.mvarId!]
     else
       logError "Endpoints do not match on either side"
       throwAbortTactic
