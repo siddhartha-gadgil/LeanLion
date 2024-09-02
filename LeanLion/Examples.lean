@@ -5,7 +5,8 @@ import LeanAideTools
 First we see in a simple example
 -/
 
-example : 1 ≤ 2 := by omega
+example : 1 ≤ 2 := byy
+  omega
 
 /-!
 We next illustrate the use of the `byy` tactic where the proof cannot be found straightaway.
@@ -14,7 +15,7 @@ We next illustrate the use of the `byy` tactic where the proof cannot be found s
 opaque sillyN : Nat
 axiom silly : sillyN = 2
 
-example : sillyN ≤ 3 := byy
+example : sillyN ≤ 3 := by
   rw [silly]
   omega
 

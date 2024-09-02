@@ -9,6 +9,7 @@ elab "#stx" "[" t:term "]" : command => do
 elab "#expr" "[" t:term "]" : command =>
   Command.liftTermElabM do
   let t ← Term.elabTerm t none
+  let t ← instantiateMVars t
   logInfo m!"Expression: {t} is {repr t}"
   let t ← reduce t
   logInfo m!"Reduced: {t} is {repr t}"
@@ -109,7 +110,7 @@ Macros can help us avoid remembering the exact syntax.
 * Actually all these monads are `State` monads equipped with a `ReaderT`, which means they also have a **read-only `Context`**.
 * There are a few other subtleties which we can ignore for now.
 
-## First examples: closing without proofs
+## First examples: Closing without proofs
 -/
 
 /-!
