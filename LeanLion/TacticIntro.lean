@@ -131,7 +131,7 @@ elab "scowl" s:str : tactic => do
   logInfo m!"Message: {s}"
   let goalType ← getMainTarget
   let sorryExp ← mkAppM ``sorryAx #[goalType, mkConst ``false]
-  closeMainGoal sorryExp
+  closeMainGoal `scowl sorryExp
 
 example : 3 ≤ 5 := by
   scowl "This is a bad proof"
@@ -214,7 +214,7 @@ elab "rw_le" t:term : tactic => withMainContext do
     let left_match ← isDefEq a₁ a₂
     let right_match ← isDefEq b₁ b₂
     if left_match && right_match then
-      closeMainGoal e
+      closeMainGoal `rw_le e
     else
     if left_match then
       let ineq ← mkFreshExprMVar <| ← mkAppM ``Nat.le #[b₁, b₂]
