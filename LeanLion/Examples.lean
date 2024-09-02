@@ -31,6 +31,7 @@ We do not continue within `case` and `match` blocks. So there is an alternative 
 -/
 example (n : Nat) : n/2 ≤ n := by
   doo
+  omega
 
 /-!
 We can add a tactic as an auto-tactic
@@ -39,4 +40,4 @@ We can add a tactic as an auto-tactic
 
 example : sillyN ≤ 3 := by sorry
 
-#leanaide_search "There are infinitely many primes" ;
+-- #leanaide_search "There are infinitely many primes" ;
