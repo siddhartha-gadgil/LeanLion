@@ -2,10 +2,10 @@ import Lean
 import Mathlib
 open Lean Meta Elab Tactic
 
-elab "#stx" t:term : command => do
+elab "#stx" "[" t:term "]" : command => do
   logInfo m!"Syntax: {t} is {repr t}"
 
-elab "#expr" t:term : command =>
+elab "#expr" "[" t:term "]" : command =>
   Command.liftTermElabM do
   let t ← Term.elabTerm t none
   logInfo m!"Expression: {t} is {repr t}"
@@ -29,10 +29,10 @@ elab "#expr" t:term : command =>
   * **Parsing** - the text is converted into a `Syntax` tree. This could represent a term, a tactic, a command, an identifier etc.
   * **Elaboration** - the `Syntax` tree for a *term* is converted into an `Expr` tree. This is the internal representation in the foundations of Lean. We also elaborate *commands*.
 -/
-#stx (2 + 4)
-#expr ((2 : Nat) + 4)
-#stx (Nat → Nat)
-#expr (Nat → Nat)
+#stx [2 + 4]
+#expr [(2 : Nat) + 4]
+#stx [Nat → Nat]
+#expr [Nat → Nat]
 
 /-!
 ## Metaprogramming with Syntax
@@ -244,3 +244,50 @@ example (x y z : Nat) (h₁ : x ≤ y) (h₂ : y ≤ z) : x ≤ z :=
 example (x y z : Nat) (h₁ : x ≤ y) (h₂ : y ≤ z) : x ≤ y :=
   by
     rw_le h₁
+
+/-!
+## Extra: correctly checking tactics
+-/
+#check Elab.runTactic
+
+def checkTactic (target: Expr)(tacticCode: Syntax) :
+    TermElabM (Option Nat) :=
+  withoutModifyingState do
+    try
+      let goal ← mkFreshExprMVar target
+      let (gs, _) ← Elab.runTactic goal.mvarId! tacticCode
+      return some gs.length
+    catch _ =>
+      return none
+
+elab "check_tac" tacticCode:tactic : tactic =>
+  withMainContext do
+    let target ← getMainTarget
+    let gs ← checkTactic target tacticCode
+    match gs with
+    | some n => logInfo m!"Tactic succeeded with {n} remaining goals"
+    | none => logWarning "Tactic failed"
+
+example : 2 ≤ 4 := by
+  check_tac decide
+  decide
+
+#check TryThis.addSuggestion
+
+syntax (name:= check_tactic) "check_tactic" tacticSeq : tactic
+
+@[tactic check_tactic] def checkTacticTactic : Tactic := fun stx => withMainContext do
+  let target ← getMainTarget
+  match stx with
+  | `(tactic|check_tactic $tac) =>
+    let gs ← checkTactic target tac
+    match gs with
+    | some n =>
+      logInfo m!"Tactic succeeded with {n} remaining goals"
+      TryThis.addSuggestion stx tac
+    | none =>
+      logWarning "Tactic failed"
+  | _ => throwUnsupportedSyntax
+example : 2 ≤ 4 := by
+  check_tactic rfl
+  decide
