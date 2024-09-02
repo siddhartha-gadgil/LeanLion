@@ -260,20 +260,6 @@ def checkTactic (target: Expr)(tacticCode: Syntax) :
     catch _ =>
       return none
 
-elab "check_tac" tacticCode:tactic : tactic =>
-  withMainContext do
-    let target ← getMainTarget
-    let gs ← checkTactic target tacticCode
-    match gs with
-    | some n => logInfo m!"Tactic succeeded with {n} remaining goals"
-    | none => logWarning "Tactic failed"
-
-example : 2 ≤ 4 := by
-  check_tac decide
-  decide
-
-#check TryThis.addSuggestion
-
 syntax (name:= check_tactic) "check_tactic" tacticSeq : tactic
 
 @[tactic check_tactic] def checkTacticTactic : Tactic := fun stx => withMainContext do
