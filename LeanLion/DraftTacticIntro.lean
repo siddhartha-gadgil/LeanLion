@@ -151,7 +151,7 @@ elab "use_till" n:num "then" tac:tacticSeq : tactic => withMainContext do
   let s ← saveState
   for j in [0:n] do
     let s ← saveState
-    try do
+    try
       let jLit := Syntax.mkNumLit <| toString j
       evalTactic <| ← `(tactic|use $jLit:term)
       if (← getGoals).isEmpty then
