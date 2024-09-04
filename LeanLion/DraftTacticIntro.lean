@@ -1,6 +1,8 @@
 import Lean
 import Mathlib
 open Lean Meta Elab Tactic
+set_option linter.unusedTactic false
+set_option linter.unusedVariables false
 
 elab "#stx" "[" t:term "]" : command => do
   logInfo m!"Syntax: {t} is {repr t}"
