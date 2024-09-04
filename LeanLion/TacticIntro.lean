@@ -4,15 +4,16 @@ open Lean Meta Elab Tactic
 set_option linter.unusedTactic false
 
 elab "#stx" "[" t:term "]" : command => do
-  logInfo m!"Syntax: {t} is {repr t}"
+  logInfo m!"Syntax: {t};\n{repr t}"
 
 elab "#expr" "[" t:term "]" : command =>
   Command.liftTermElabM do
   let t ← Term.elabTerm t none
   let t ← instantiateMVars t
-  logInfo m!"Expression: {t} is {repr t}"
+  logInfo m!"Expression: {t}:\n{repr t}"
   let t ← reduce t
-  logInfo m!"Reduced: {t} is {repr t}"
+  let t ← instantiateMVars t
+  logInfo m!"Reduced: {t}:\n{repr t}"
 
 /-!
 # Meta-programming for Tactics
@@ -35,6 +36,7 @@ elab "#expr" "[" t:term "]" : command =>
 #expr [(2 : Nat) + 4]
 #stx [Nat → Nat]
 #expr [Nat → Nat]
+#expr [fun (n : Nat) ↦ n + 2]
 
 /-!
 ## Metaprogramming with Syntax
