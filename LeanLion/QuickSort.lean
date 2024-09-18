@@ -47,13 +47,13 @@ termination_by l => l.length
 
 @[simp]
 theorem quickSort_nil : quickSort ([] : List α) = [] := by
-  rfl
+  simp [quickSort]
 
 @[simp]
 theorem quickSort_cons (pivot : α) (l : List α) :
     quickSort (pivot :: l) = (quickSort (smaller pivot l)) ++
     pivot :: (quickSort (larger pivot l)) := by
-  rfl
+  simp [quickSort]
 
 theorem mem_iff_below_or_above_pivot (pivot : α) (l : List α)(x : α) :
     x ∈ l ↔ x ∈ smaller pivot l ∨ x ∈ larger pivot l := by

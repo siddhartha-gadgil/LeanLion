@@ -160,7 +160,8 @@ We write a tactic to plug in various natural numbers into `use` until the tactic
 example : ∃ n: Nat, n * n = 64 := by
   use 8
 
-elab "use_till" n:num "then" tac:tacticSeq : tactic => withMainContext do
+elab "use_till" n:num "then" tac:tacticSeq : tactic =>
+  withMainContext do
   let n := n.getNat
   let s₀ ← saveState
   for j in [0:n] do
@@ -179,9 +180,9 @@ elab "use_till" n:num "then" tac:tacticSeq : tactic => withMainContext do
   restoreState s₀
   throwError "tactic failed"
 
-
 example : ∃ n: Nat, n * n = 64 := by
   use_till 10 then rfl
+
 
 /-!
 ### Next example: `le_rw`
@@ -266,8 +267,14 @@ We now write the tactic `rw_le` that rewrites.
 
 example (x y z : Nat) (h₁ : x ≤ y) (h₂ : y ≤ z) : x ≤ z :=
   by
+    rw_le h₁
+    exact h₂
+
+example (x y z : Nat) (h₁ : x ≤ y) (h₂ : y ≤ z) : x ≤ z :=
+  by
     rw_le h₂
-    assumption
+    exact h₁
+
 
 example (x y z : Nat) (h₁ : x ≤ y) (h₂ : y ≤ z) : x ≤ y :=
   by
