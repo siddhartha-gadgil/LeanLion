@@ -1,7 +1,5 @@
 import Mathlib
 import LeanAideTools
-import LeanAideTools.AsyncMode
-#check Array.eraseIdx
 
 -- example (n: Nat)(h : Nat.Prime n) : n + 1 ≤ 30 := by slim_check
 -- example (n: Nat)(h : Nat.Prime n) : n % 2 = 1 := by slim_check
@@ -15,8 +13,8 @@ partial def quickSort (arr : Array α) : Array α :=
   if arr.size <= 1 then arr
   else
     let pivot := arr.get! (arr.size / 2)
-    let left := (arr.eraseIdx (arr.size / 2)).filter (fun x => x < pivot)
-    let right := (arr.eraseIdx (arr.size / 2)).filter (fun x => x >= pivot)
+    let left := (arr.eraseIdx! (arr.size / 2)).filter (fun x => x < pivot)
+    let right := (arr.eraseIdx! (arr.size / 2)).filter (fun x => x >= pivot)
     (quickSort left).push pivot |>.append (quickSort right)
 
 partial def quickSortTask (arr : Array α)(depth : Nat) : Task (Array α) :=
@@ -24,8 +22,8 @@ partial def quickSortTask (arr : Array α)(depth : Nat) : Task (Array α) :=
   | 0 => Task.spawn fun _ => (quickSort arr)
   | n + 1 =>
     let pivot := arr.get! (arr.size / 2)
-    let left := (arr.eraseIdx (arr.size / 2)).filter (fun x => x < pivot)
-    let right := (arr.eraseIdx (arr.size / 2)).filter (fun x => x >= pivot)
+    let left := (arr.eraseIdx! (arr.size / 2)).filter (fun x => x < pivot)
+    let right := (arr.eraseIdx! (arr.size / 2)).filter (fun x => x >= pivot)
     let leftTask := quickSortTask left n
     let rightTask := quickSortTask right n
     Task.bind (rightTask) (fun right =>
@@ -33,5 +31,3 @@ partial def quickSortTask (arr : Array α)(depth : Nat) : Task (Array α) :=
 
 partial def quickSortAsync (arr : Array α)(depth : Nat) : Array α :=
   (quickSortTask arr depth).get
-
-#fail_tactic slim_check
