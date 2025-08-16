@@ -1,4 +1,4 @@
-import LeanLion.FastQuickSort
+import LeanLion.QuickSort
 
 def main (args: List String) : IO Unit := do
   let n := args.head? |>.bind String.toNat? |>.getD 100000
@@ -7,10 +7,11 @@ def main (args: List String) : IO Unit := do
   let mut l := #[]
   for _ in [0:n] do
     l := l.push (← IO.rand 0 m)
-  IO.println s!"Sorting random list of size {n} with max value {m}"
+  IO.println s!"Sorting random list (naive) of size {n} with max value {m}"
+  let l' := l.toList
   let start ← IO.monoMsNow
-  let sorted := quickSortAsync l 3
+  let sorted := quickSort l'
   let done ← IO.monoMsNow
   IO.println s!"Time for sorting: {done - start}ms"
-  IO.println s!"Done: got {sorted.size} elements. First 10: {sorted.toList.take 10}"
+  IO.println s!"Done: got {sorted.length} elements. First 10: {sorted.take 10}"
   return ()

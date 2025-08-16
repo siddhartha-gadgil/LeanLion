@@ -10,7 +10,7 @@ package «LeanLion» where
   -- add any additional package configuration options here
 
 require mathlib from git
-  "https://github.com/leanprover-community/mathlib4.git" @ "v4.17.0"
+  "https://github.com/leanprover-community/mathlib4.git" @ "v4.22.0"
 
 require LeanAideTools from git
   "https://github.com/siddhartha-gadgil/LeanAideTools.git" @ "main"
@@ -21,3 +21,5 @@ lean_lib «LeanLion» where
 
 @[default_target]
 lean_exe quicksort where
+
+lean_exe quicksortAsync where

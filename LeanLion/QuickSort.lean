@@ -20,15 +20,15 @@ We begin by defining `smaller` and `larger` lists. We define them as abbreviatio
 /-!
 We define `smaller` and `larger` using `List.filter`. We need some theorems relating to filtering.
 -/
-#check List.mem_filter -- ∀ {α : Type u_1} {x : α} {p : α → Bool} {as : List α}, x ∈ List.filter p as ↔ x ∈ as ∧ p x = true
-#check List.length_filter_le -- ∀ {α : Type u_1} (p : α → Bool) (l : List α), List.length (List.filter p l) ≤ List.length l
+-- #check List.mem_filter -- ∀ {α : Type u_1} {x : α} {p : α → Bool} {as : List α}, x ∈ List.filter p as ↔ x ∈ as ∧ p x = true
+-- #check List.length_filter_le -- ∀ {α : Type u_1} (p : α → Bool) (l : List α), List.length (List.filter p l) ≤ List.length l
 
 variable {α : Type}[LinearOrder α]
 
-abbrev smaller (pivot : α) (l : List α) : List α :=
+def smaller (pivot : α) (l : List α) : List α :=
   l.filter (fun x => x ≤  pivot)
 
-abbrev larger (pivot : α) (l : List α) : List α :=
+def larger (pivot : α) (l : List α) : List α :=
   l.filter (fun x => x > pivot)
 
 def quickSort : List α → List α
@@ -61,18 +61,18 @@ theorem mem_iff_below_or_above_pivot (pivot : α) (l : List α)(x : α) :
   · intro h
     by_cases h' : x ≤ pivot
     · left
-      rw [List.mem_filter]
+      rw [smaller, List.mem_filter]
       simp [h, h']
     · right
-      rw [List.mem_filter]
-      simp [h, h', lt_of_not_ge h']
+      rw [larger, List.mem_filter]
+      simp [h, lt_of_not_ge h']
   · intro h
     cases h with
     | inl h =>
-      rw [List.mem_filter] at h
+      rw [smaller, List.mem_filter] at h
       exact h.left
     | inr h =>
-      rw[List.mem_filter] at h
+      rw [larger, List.mem_filter] at h
       exact h.left
 
 theorem mem_iff_mem_quickSort (l: List α)(x : α) :
@@ -91,8 +91,8 @@ theorem mem_iff_mem_quickSort (l: List α)(x : α) :
       simp [List.length_cons]
       apply Nat.succ_le_succ
       apply List.length_filter_le
-    let ihb := mem_iff_mem_quickSort (smaller pivot l)
-    let iha := mem_iff_mem_quickSort (larger pivot l)
+    have ihb := mem_iff_mem_quickSort (smaller pivot l)
+    have iha := mem_iff_mem_quickSort (larger pivot l)
     rw [← ihb, ← iha]
     tauto
 termination_by l.length
@@ -158,14 +158,14 @@ theorem quickSort_sorted (l : List α) : Sorted (quickSort l) := by
     · intro x
       rw [← mem_iff_mem_quickSort]
       intro h
-      rw[List.mem_filter] at h
+      rw[smaller, List.mem_filter] at h
       simp at h
       exact h.right
     · simp
       intro x
       rw [← mem_iff_mem_quickSort]
       intro h
-      rw [List.mem_filter] at h
+      rw [larger, List.mem_filter] at h
       simp at h
       apply le_of_lt
       exact h.right
@@ -174,7 +174,7 @@ theorem quickSort_sorted (l : List α) : Sorted (quickSort l) := by
       · simp
       · intro x h
         rw [← mem_iff_mem_quickSort] at h
-        rw[List.mem_filter] at h
+        rw[larger, List.mem_filter] at h
         simp at h
         apply le_of_lt
         exact h.right
