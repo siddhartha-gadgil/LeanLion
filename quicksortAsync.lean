@@ -38,16 +38,3 @@ def main (args: List String) : IO Unit := do
   IO.eprintln s!"Time for sorting: {done - start}ms"
   for i in [0:10] do
     IO.eprintln s!"* {sorted[i]!}"
---   IO.eprintln "Generating again, this time with Async"
---   let start ← IO.monoMsNow
---   let base : Array Nat := Array.replicate n 0
---   let arrAsync : Async (Array (AsyncTask Nat)) :=
---     concurrentlyAll (base.map (fun _ => async <| IO.rand 0 m))
---   let arrTask ← arrAsync.toIO
---   let arrT ← arrTask.block
---   let arr ← arrT.mapM (fun x => x.block)
---   IO.eprintln s!"Done: got {arr.size} elements."
---   let done ← IO.monoMsNow
---   IO.eprintln s!"Time for generating: {done - start}ms"
-
--- #check async
