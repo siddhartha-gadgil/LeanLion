@@ -60,13 +60,11 @@ theorem mem_iff_below_or_above_pivot (pivot : α)
     x ∈ l ↔ x ∈ smaller pivot l ∨ x ∈ larger pivot l := by
   apply Iff.intro
   · intro h
-    by_cases h' : x ≤ pivot
-    · left
+    if h' : x ≤ pivot then
       grind
-    · right
+    else
       grind [lt_iff_not_ge]
-  · intro h
-    grind
+  · grind
 
 theorem mem_iff_mem_quickSort (l: List α)(x : α) :
     x ∈ l ↔ x ∈ quickSort l := by
