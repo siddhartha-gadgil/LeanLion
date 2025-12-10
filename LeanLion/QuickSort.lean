@@ -253,8 +253,13 @@ theorem quickSort_sorted' (l : List α) : Sorted (quickSort l) := by
 termination_by l.length
 
 
-set_option pp.all true in
+set_option pp.match false in
+set_option pp.proofs false in
 #print quickSort
+
+set_option pp.match false in
+set_option pp.proofs false in
+#print quickSort.match_1
 
 /-
 {α : Sort u} →
