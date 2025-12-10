@@ -22,61 +22,37 @@ We define `smaller` and `larger` using `List.filter`. We need some theorems rela
 -/
 variable {α : Type}[LinearOrder α]
 
-@[grind]
+@[simp, grind]
 def smaller (pivot : α) (l : List α) : List α :=
   l.filter (fun x => x ≤  pivot)
 
-@[grind]
+@[simp, grind]
 def larger (pivot : α) (l : List α) : List α :=
   l.filter (fun x => pivot < x)
 
 def quickSort : List α → List α
-  | [] => []
-  | pivot :: l =>
-    have : (smaller pivot l).length < (pivot :: l).length := by
-      grind
-    have : (larger pivot l).length < (pivot :: l).length := by
-      grind
-    (quickSort (smaller pivot l)) ++ pivot :: (quickSort (larger pivot l))
-termination_by l => l.length
+  | _ => sorry
 
 
 @[simp, grind]
 theorem quickSort_nil : quickSort ([] : List α) = [] := by
-  simp [quickSort]
+  sorry
 
 @[simp, grind]
 theorem quickSort_cons (pivot : α) (l : List α) :
     quickSort (pivot :: l) = (quickSort (smaller pivot l)) ++
     pivot :: (quickSort (larger pivot l)) := by
-  simp [quickSort]
+  sorry
 
 @[grind]
 theorem mem_iff_below_or_above_pivot (pivot : α)
   (l : List α)(x : α) :
     x ∈ l ↔ x ∈ smaller pivot l ∨ x ∈ larger pivot l := by
-  apply Iff.intro
-  · intro h
-    if h' : x ≤ pivot then
-      grind
-    else
-      grind [lt_iff_not_ge]
-  · grind
+  sorry
 
 theorem mem_iff_mem_quickSort (l: List α)(x : α) :
     x ∈ l ↔ x ∈ quickSort l := by
-  cases l with
-  | nil =>
-    simp
-  | cons pivot l =>
-    have : (smaller pivot l).length < (pivot :: l).length := by
-      grind
-    have : (larger pivot l).length < (pivot :: l).length := by
-      grind
-    have ihb := mem_iff_mem_quickSort (smaller pivot l)
-    have iha := mem_iff_mem_quickSort (larger pivot l)
-    grind
-termination_by l.length
+  sorry
 
 inductive Sorted : List α → Prop
   | nil : Sorted []
@@ -87,44 +63,11 @@ inductive Sorted : List α → Prop
 @[grind]
 theorem head_le_of_sorted  (a: α) (l : List α) :
   Sorted (a :: l) → ∀ x ∈ l, a ≤ x := by
-  intro h
-  match h with
-  | Sorted.singleton .. => simp
-  | Sorted.step x y l hxy tail_sorted =>
-    intro z hz
-    simp at hz
-    cases hz
-    · grind
-    · have ih := head_le_of_sorted y l tail_sorted
-      trans y
-      · assumption
-      · grind
+  sorry
 
 theorem cons_sorted (l : List α) :  Sorted l → (a : α) →
   (∀ y ∈ l, a ≤ y) → Sorted (a :: l)  := by
-  intro h₁
-  induction h₁ with
-  | nil =>
-    intro a h₀
-    apply Sorted.singleton
-  | singleton x =>
-    intro a h₀
-    simp at h₀
-    apply Sorted.step a x
-    · assumption
-    · apply Sorted.singleton
-  | step x y l hxy tail_sorted ih =>
-    intro a h₀
-    simp at h₀
-    rcases h₀ with ⟨h₁, h₂, h₃⟩
-    apply Sorted.step a x (y :: l)
-    · assumption
-    · apply ih
-      simp [hxy]
-      intro z hz
-      trans y
-      · assumption
-      · grind
+  sorry
 
 theorem sorted_sandwitch (l₁ : List α) (h₁ : Sorted l₁)
     (l₂ : List α) (h₂ : Sorted l₂)
@@ -132,42 +75,10 @@ theorem sorted_sandwitch (l₁ : List α) (h₁ : Sorted l₁)
     (h_bound₁ : ∀ x ∈ l₁, x ≤ bound)
     (h_bound₂ : ∀ x ∈ l₂, bound ≤ x) :
     Sorted (l₁ ++ bound :: l₂) := by
-    induction h₁ with
-    | nil =>
-      simp only [List.nil_append]
-      apply cons_sorted l₂ h₂ bound h_bound₂
-    | singleton x =>
-      simp only [List.cons_append, List.nil_append]
-      apply Sorted.step x bound l₂
-      · grind
-      · apply cons_sorted l₂ h₂ bound h_bound₂
-    | step x y l hxy tail_sorted ih =>
-      simp only [List.cons_append]
-      apply Sorted.step x y (l ++ bound :: l₂) hxy
-      grind
+  sorry
 
 theorem quickSort_sorted (l : List α) : Sorted (quickSort l) := by
-  cases l with
-  | nil =>
-    simp [quickSort_nil]
-    apply Sorted.nil
-  | cons pivot l =>
-    rw [quickSort_cons]
-    have : (smaller pivot l).length < (pivot :: l).length := by
-      grind
-    have : (larger pivot l).length < (pivot :: l).length := by
-      grind
-    apply sorted_sandwitch
-    · apply quickSort_sorted (smaller pivot l)
-    · apply quickSort_sorted (larger pivot l)
-    · intro x
-      rw [← mem_iff_mem_quickSort]
-      grind
-    · intro x
-      rw [← mem_iff_mem_quickSort]
-      grind [le_of_lt]
-termination_by l.length
-
+  sorry
 -- Exploration commands
 
 set_option pp.match false in
