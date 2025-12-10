@@ -273,3 +273,35 @@ set_option pp.proofs false in
   {r : α → α → Prop} → WellFounded r → {C : α → Sort v} → (a : α) → ((x : α) → ((y : α) → r y x → C y) → C x) → C a
 -/
 #check WellFounded.recursion
+
+#check List.get
+
+def monotone (l: List Nat) : Prop :=
+  ∀ i j, (h₁ : i < j) → (h₂ : j < l.length) → l.get ⟨i, by grind⟩ ≤ l.get ⟨j, h₂⟩
+
+def monotone_of_sorted (l : List Nat) (h : Sorted l) : monotone l := by
+  intro i j h₁ h₂
+  cases c:h with
+  | nil => simp at h₂
+  | singleton x =>
+    simp only [List.length_cons, List.length_nil, zero_add, Nat.lt_one_iff] at h₂
+    grind
+  | step x y l hxy tail_sorted =>
+    match p:i, q:j with
+    | 0, m + 1 =>
+      simp only [List.length_cons, Fin.zero_eta, List.get_eq_getElem, Fin.coe_ofNat_eq_mod,
+        Nat.zero_mod, List.getElem_cons_zero, List.getElem_cons_succ, ge_iff_le]
+      apply head_le_of_sorted x (y :: l)
+      · exact h
+      · simp
+    | m + 1, n + 1 =>
+      have h₃ : m < n := by
+        apply Nat.lt_of_succ_lt_succ
+        exact h₁
+      have h₄ : n < (y :: l).length := by
+        simp only [List.length_cons, add_lt_add_iff_right] at h₂
+        simp only [List.length_cons]
+        assumption
+      have ih := monotone_of_sorted (y :: l) tail_sorted m n h₃ h₄
+      simp only [List.length_cons, List.get_eq_getElem, List.getElem_cons_succ, ge_iff_le]
+      exact ih
