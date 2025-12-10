@@ -20,9 +20,6 @@ We begin by defining `smaller` and `larger` lists. We define them as abbreviatio
 /-!
 We define `smaller` and `larger` using `List.filter`. We need some theorems relating to filtering.
 -/
--- #check List.mem_filter -- ∀ {α : Type u_1} {x : α} {p : α → Bool} {as : List α}, x ∈ List.filter p as ↔ x ∈ as ∧ p x = true
--- #check List.length_filter_le -- ∀ {α : Type u_1} (p : α → Bool) (l : List α), List.length (List.filter p l) ≤ List.length l
-
 variable {α : Type}[LinearOrder α]
 
 @[grind]
@@ -171,90 +168,11 @@ theorem quickSort_sorted (l : List α) : Sorted (quickSort l) := by
       grind [le_of_lt]
 termination_by l.length
 
--- Older code
-
-theorem append_sorted (bound: α)(l₁ l₂ : List α) :
-  (∀ x ∈ l₁, x ≤ bound) → (∀ x ∈ l₂, bound ≤  x) → Sorted l₁ → Sorted l₂ → Sorted (l₁ ++ l₂) := by
-  intro h₁ h₂ s₁
-  induction s₁ with
-  | nil => simp
-  | singleton x =>
-    simp at *
-    intro s₂
-    cases s₂ with
-    | nil => apply Sorted.singleton
-    | singleton y =>
-      apply Sorted.step x y
-      · simp at h₂
-        trans bound <;> assumption
-      · apply Sorted.singleton
-    | step y z l hyz s =>
-      apply Sorted.step x y
-      · trans bound
-        · assumption
-        · simp [List.mem_cons] at h₂
-          exact h₂.left
-      · exact Sorted.step y z l hyz s
-  | step x y l hxy _ ih =>
-    intro s₂
-    apply Sorted.step x y (l ++ l₂) hxy
-    rw [← List.cons_append]
-    apply ih
-    · simp [List.mem_cons]
-      simp [List.mem_cons] at h₁
-      apply And.intro
-      · apply h₁.right.left
-      · apply h₁.right.right
-    · exact s₂
-
-theorem quickSort_sorted' (l : List α) : Sorted (quickSort l) := by
-  cases l with
-  | nil =>
-    simp [quickSort_nil]
-    apply Sorted.nil
-  | cons pivot l =>
-    rw [quickSort_cons]
-    have : (smaller pivot l).length < (pivot :: l).length := by
-      simp [List.length_cons]
-      apply Nat.succ_le_succ
-      apply List.length_filter_le
-    have : (larger pivot l).length < (pivot :: l).length := by
-      simp [List.length_cons]
-      apply Nat.succ_le_succ
-      apply List.length_filter_le
-    let ihb := quickSort_sorted' (smaller pivot l)
-    let iha := quickSort_sorted' (larger pivot l)
-    apply append_sorted pivot
-    · intro x
-      rw [← mem_iff_mem_quickSort]
-      intro h
-      rw[smaller, List.mem_filter] at h
-      simp at h
-      exact h.right
-    · simp
-      intro x
-      rw [← mem_iff_mem_quickSort]
-      intro h
-      rw [larger, List.mem_filter] at h
-      simp at h
-      apply le_of_lt
-      exact h.right
-    · assumption
-    · apply append_sorted pivot [pivot] (quickSort (larger pivot l))
-      · simp
-      · intro x h
-        rw [← mem_iff_mem_quickSort] at h
-        rw[larger, List.mem_filter] at h
-        simp at h
-        apply le_of_lt
-        exact h.right
-      · apply Sorted.singleton
-      · assumption
-termination_by l.length
-
+-- Exploration commands
 
 set_option pp.match false in
 set_option pp.proofs false in
+set_option pp.fieldNotation false in
 #print quickSort
 
 set_option pp.match false in
