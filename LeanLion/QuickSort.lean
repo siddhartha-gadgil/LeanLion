@@ -113,8 +113,7 @@ theorem cons_sorted (l : List α) :  Sorted l → (a : α) →
     apply Sorted.singleton
   | x :: l' =>
     apply Sorted.step a x
-    · simp at h₀
-      grind
+    · grind
     · assumption
 
 theorem sorted_sandwitch (l₁ : List α) (h₁ : Sorted l₁)
@@ -124,17 +123,13 @@ theorem sorted_sandwitch (l₁ : List α) (h₁ : Sorted l₁)
     (h_bound₂ : ∀ x ∈ l₂, bound ≤ x) :
     Sorted (l₁ ++ bound :: l₂) := by
     induction h₁ with
-    | nil =>
-      grind
+    | nil => grind
     | singleton x =>
       simp only [List.cons_append, List.nil_append]
-      apply Sorted.step x bound l₂
-      · grind
-      · grind
+      apply Sorted.step <;> grind
     | step x y l hxy tail_sorted ih =>
       simp only [List.cons_append]
-      apply Sorted.step x y (l ++ bound :: l₂) hxy
-      grind
+      apply Sorted.step <;> grind
 
 theorem quickSort_sorted (l : List α) : Sorted (quickSort l) := by
   cases l with
@@ -143,13 +138,13 @@ theorem quickSort_sorted (l : List α) : Sorted (quickSort l) := by
     apply Sorted.nil
   | cons pivot l =>
     rw [quickSort_cons]
-    have : (smaller pivot l).length < (pivot :: l).length := by
-      grind
-    have : (larger pivot l).length < (pivot :: l).length := by
-      grind
     apply sorted_sandwitch
-    · apply quickSort_sorted (smaller pivot l)
-    · apply quickSort_sorted (larger pivot l)
+    · have : (smaller pivot l).length < (pivot :: l).length :=
+        by grind
+      apply quickSort_sorted (smaller pivot l)
+    · have : (larger pivot l).length < (pivot :: l).length :=
+        by grind
+      apply quickSort_sorted (larger pivot l)
     · intro x
       rw [← mem_iff_mem_quickSort]
       grind
