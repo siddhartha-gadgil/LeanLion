@@ -36,9 +36,9 @@ def larger (pivot : α) (l : List α) : List α :=
 def quickSort : List α → List α
   | [] => []
   | pivot :: l =>
-    have : (smaller pivot l).length < (pivot :: l).length := by
+    have hs : (smaller pivot l).length < (pivot :: l).length := by
       grind
-    have : (larger pivot l).length < (pivot :: l).length := by
+    have hl : (larger pivot l).length < (pivot :: l).length := by
       grind
     (quickSort (smaller pivot l)) ++ pivot :: (quickSort (larger pivot l))
 termination_by l => l.length
@@ -63,7 +63,8 @@ theorem mem_iff_below_or_above_pivot (pivot : α)
     if h' : x ≤ pivot then
       grind
     else
-      grind [lt_iff_not_ge]
+      simp only [not_le] at h'
+      grind
   · grind
 
 theorem mem_iff_mem_quickSort (l: List α)(x : α) :
@@ -103,31 +104,18 @@ theorem head_le_of_sorted  (a: α) (l : List α) :
       · assumption
       · grind
 
+@[grind]
 theorem cons_sorted (l : List α) :  Sorted l → (a : α) →
   (∀ y ∈ l, a ≤ y) → Sorted (a :: l)  := by
-  intro h₁
-  induction h₁ with
-  | nil =>
-    intro a h₀
+  intro h₁ a h₀
+  match l with
+  | [] =>
     apply Sorted.singleton
-  | singleton x =>
-    intro a h₀
-    simp at h₀
+  | x :: l' =>
     apply Sorted.step a x
+    · simp at h₀
+      grind
     · assumption
-    · apply Sorted.singleton
-  | step x y l hxy tail_sorted ih =>
-    intro a h₀
-    simp at h₀
-    rcases h₀ with ⟨h₁, h₂, h₃⟩
-    apply Sorted.step a x (y :: l)
-    · assumption
-    · apply ih
-      simp [hxy]
-      intro z hz
-      trans y
-      · assumption
-      · grind
 
 theorem sorted_sandwitch (l₁ : List α) (h₁ : Sorted l₁)
     (l₂ : List α) (h₂ : Sorted l₂)
@@ -137,13 +125,12 @@ theorem sorted_sandwitch (l₁ : List α) (h₁ : Sorted l₁)
     Sorted (l₁ ++ bound :: l₂) := by
     induction h₁ with
     | nil =>
-      simp only [List.nil_append]
-      apply cons_sorted l₂ h₂ bound h_bound₂
+      grind
     | singleton x =>
       simp only [List.cons_append, List.nil_append]
       apply Sorted.step x bound l₂
       · grind
-      · apply cons_sorted l₂ h₂ bound h_bound₂
+      · grind
     | step x y l hxy tail_sorted ih =>
       simp only [List.cons_append]
       apply Sorted.step x y (l ++ bound :: l₂) hxy
