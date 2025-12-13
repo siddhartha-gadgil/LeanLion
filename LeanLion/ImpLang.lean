@@ -28,20 +28,6 @@ def exprRelVars (vars: List (Name × Nat)) (stx: Syntax.Term) : MetaM Syntax.Ter
     let arg := Syntax.mkNumLit <| toString val
     `((fun ($nId : $nat) => $inner) $arg)
 
-partial def getNatM (e: Expr) : TermElabM Nat := do
-  let e ← instantiateMVars e
-  Term.synthesizeSyntheticMVarsNoPostponing
-  if ← isDefEq e (mkConst ``Nat.zero)
-    then return 0
-  else
-    let n ← mkFreshExprMVar (mkConst ``Nat)
-    let nSucc ← mkAppM ``Nat.succ #[n]
-    if ← isDefEq e nSucc
-    then
-      let pred ← getNatM n
-      return pred + 1
-    else
-      throwError s!"Expression {← ppExpr e} is not a natural number"
 
 def getNatRelVarsM (vars: List (Name × Nat))
   (t: Syntax.Term) : TermElabM Nat := do
@@ -50,52 +36,12 @@ def getNatRelVarsM (vars: List (Name × Nat))
   Term.synthesizeSyntheticMVarsNoPostponing
   unsafe evalExpr Nat (mkConst ``Nat) e
 
-def getNatRelVarsM' (vars: List (Name × Nat))
-  (t: Syntax.Term) : TermElabM Nat := do
-  match vars with
-  | [] =>
-    let e ← elabTermEnsuringType t (mkConst ``Nat)
-    getNatM e
-  | (n, val) :: tail =>
-    withLetDecl n (mkConst ``Nat) (toExpr val)
-      fun _ => getNatRelVarsM' tail t
-
-elab "get_nat%" t:term : term => do
-  let e ← elabTerm t (mkConst ``Nat)
-  let n ← getNatM e
-  return toExpr n
-
-#eval get_nat% 4 * 5
 
 elab "get_nat_rel_n%" t:term : term => do
   let n ← getNatRelVarsM [(`n, 3)] t
   return toExpr n
 
-#eval get_nat% 3 * 5
-
 #eval get_nat_rel_n% (3 * 5 + n)
-
-def getBoolM (e: Expr) : TermElabM Bool := do
-  let e ← instantiateMVars e
-  Term.synthesizeSyntheticMVarsNoPostponing
-  if ← isDefEq e (mkConst ``Bool.false)
-    then return false
-  else
-    if ← isDefEq e (mkConst ``Bool.true)
-    then
-      return true
-    else
-      throwError s!"Expression {← ppExpr e} is not a boolean"
-
-def getBoolRelVarsM' (vars: List (Name × Nat))
-  (t: Syntax.Term) : TermElabM Bool := do
-  match vars with
-  | [] =>
-    let e ← elabTermEnsuringType t (mkConst ``Bool)
-    getBoolM e
-  | (n, val) :: tail =>
-    withLetDecl n (mkConst ``Nat) (toExpr val)
-      fun _ => getBoolRelVarsM' tail t
 
 def getBoolRelVarsM (vars: List (Name × Nat))
   (t: Syntax.Term) : TermElabM Bool := do
@@ -141,6 +87,8 @@ syntax "if" ppSpace "(" term ")" ppSpace imp_block "else" imp_block : imp_statem
 
 syntax "while" "(" term ")" ppSpace imp_block : imp_statement
 
+syntax "print" str ";" : imp_statement
+
 partial def runStatementM :
   TSyntax `imp_statement → ImpLangM Unit
 | `(imp_statement| {}) => return
@@ -163,6 +111,9 @@ partial def runStatementM :
   if c then
     runBlockM b
     runStatementM w
+| `(imp_statement| print $s:str ;) => do
+  let m ← get
+  logInfo m!"Print: {s.getString}, State: {m.toList}"
 | _ => throwUnsupportedSyntax
 where runBlockM (bs : TSyntax ``imp_block): ImpLangM Unit :=
   match bs with
@@ -188,14 +139,20 @@ elab "#run_stat" s:imp_statement "go" : command  =>
   while (i ≤ n) {sum := sum + i; i := i + 1;} go
 
 #run_stat
-  n := 5;
+  n := 59;
   i := 2;
-  check := 0;
-  while (i ≤ n) {
+  is_prime := 1;
+  while (i < n) {
     if (i ∣ n) {
-      check := 1;
+      is_prime := 0;
     } else {}
     i := i + 1;
-  } go
+  }
+  if (is_prime = 1) {
+    print "n is prime";
+  } else {
+    print "n is not prime";
+  }
+  go
 
 end ImpLang
