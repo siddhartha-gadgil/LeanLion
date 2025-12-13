@@ -94,7 +94,7 @@ theorem head_le_of_sorted  (a: α) (l : List α) :
   intro h
   match h with
   | Sorted.singleton .. => simp
-  | Sorted.step x y l hxy tail_sorted =>
+  | Sorted.step .(a) y l hxy tail_sorted =>
     intro z hz
     simp at hz
     cases hz

@@ -11,7 +11,7 @@ def main (args: List String) : IO Unit := do
   let l' := l.toList
   let start ← IO.monoMsNow
   let sorted := quickSort l'
+  IO.println s!"Done: got {sorted.length} elements. First 10: {sorted.take 10}"
   let done ← IO.monoMsNow
   IO.println s!"Time for sorting: {done - start}ms"
-  IO.println s!"Done: got {sorted.length} elements. First 10: {sorted.take 10}"
   return ()
