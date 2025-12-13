@@ -17,6 +17,17 @@ open Lean Meta Elab Term
 - When we run a program, we only change state
 - We can drop the requirement of declaration in advance, so we just have statements.
 -/
+def exprRelVars (vars: List (Name × Nat)) (stx: Syntax.Term) : MetaM Syntax.Term :=
+  match vars with
+  | [] => return stx
+  | (n, val) :: tail => do
+    let nId := mkIdent n
+    let nat := mkIdent ``Nat
+    let inner ←
+      exprRelVars tail stx
+    let arg := Syntax.mkNumLit <| toString val
+    `((fun ($nId : $nat) => $inner) $arg)
+
 partial def getNatM (e: Expr) : TermElabM Nat := do
   let e ← instantiateMVars e
   Term.synthesizeSyntheticMVarsNoPostponing
@@ -34,13 +45,20 @@ partial def getNatM (e: Expr) : TermElabM Nat := do
 
 def getNatRelVarsM (vars: List (Name × Nat))
   (t: Syntax.Term) : TermElabM Nat := do
+  let stx ← exprRelVars vars t
+  let e ← elabTermEnsuringType stx (mkConst ``Nat)
+  Term.synthesizeSyntheticMVarsNoPostponing
+  unsafe evalExpr Nat (mkConst ``Nat) e
+
+def getNatRelVarsM' (vars: List (Name × Nat))
+  (t: Syntax.Term) : TermElabM Nat := do
   match vars with
   | [] =>
     let e ← elabTermEnsuringType t (mkConst ``Nat)
     getNatM e
   | (n, val) :: tail =>
     withLetDecl n (mkConst ``Nat) (toExpr val)
-      fun _ => getNatRelVarsM tail t
+      fun _ => getNatRelVarsM' tail t
 
 elab "get_nat%" t:term : term => do
   let e ← elabTerm t (mkConst ``Nat)
@@ -69,7 +87,7 @@ def getBoolM (e: Expr) : TermElabM Bool := do
     else
       throwError s!"Expression {← ppExpr e} is not a boolean"
 
-def getBoolRelVarsM (vars: List (Name × Nat))
+def getBoolRelVarsM' (vars: List (Name × Nat))
   (t: Syntax.Term) : TermElabM Bool := do
   match vars with
   | [] =>
@@ -77,8 +95,14 @@ def getBoolRelVarsM (vars: List (Name × Nat))
     getBoolM e
   | (n, val) :: tail =>
     withLetDecl n (mkConst ``Nat) (toExpr val)
-      fun _ => getBoolRelVarsM tail t
+      fun _ => getBoolRelVarsM' tail t
 
+def getBoolRelVarsM (vars: List (Name × Nat))
+  (t: Syntax.Term) : TermElabM Bool := do
+  let stx ← exprRelVars vars t
+  let e ← elabTermEnsuringType stx (mkConst ``Bool)
+  Term.synthesizeSyntheticMVarsNoPostponing
+  unsafe evalExpr Bool (mkConst ``Bool) e
 
 namespace ImpLang
 
@@ -163,8 +187,6 @@ elab "#run_stat" s:imp_statement "go" : command  =>
   i := 1;
   while (i ≤ n) {sum := sum + i; i := i + 1;} go
 
-/-- error: Expression decide (i ∣ n) is not a boolean -/
-#guard_msgs in
 #run_stat
   n := 5;
   i := 2;
@@ -175,7 +197,5 @@ elab "#run_stat" s:imp_statement "go" : command  =>
     } else {}
     i := i + 1;
   } go
-
-
 
 end ImpLang
