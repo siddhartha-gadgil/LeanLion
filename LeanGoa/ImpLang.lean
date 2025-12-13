@@ -101,6 +101,37 @@ partial def getBoolM : TSyntax `bool_exp → ImpLangM Bool
 | `(bool_exp| ($b)) => getBoolM b
 | _ => throwUnsupportedSyntax
 
+partial def runStatementM :
+  TSyntax `imp_statement → ImpLangM Unit
+| `(imp_statement| {}) => return
+| `(imp_statement| {$s}) => do
+    runStatementM s
+| `(imp_statement| $s₁ $s₂) => do
+  runStatementM s₁
+  runStatementM s₂
+| `(imp_statement| $name:ident := $val ;) => do
+  let value ← getIntM val
+  let n := name.getId
+  setVar n value
+| `(imp_statement| if ($p) $t else $e) => do
+  let c ← getBoolM p
+  if c
+    then runBlockM t
+    else runBlockM e
+| w@`(imp_statement| while ($p) $b) => do
+  let c ← getBoolM p
+  if c then
+    runBlockM b
+    runStatementM w
+| _ => throwUnsupportedSyntax
+where runBlockM (bs : TSyntax ``imp_block): ImpLangM Unit :=
+  match bs with
+  | `(imp_block| {}) => return
+  | `(imp_block| {$s}) =>
+    runStatementM s
+  | _ => throwUnsupportedSyntax
+
+
 -- Side effects not controlled. Only for testing.
 partial def getStatementM :
   TSyntax `imp_statement → ImpLangM Statement
@@ -135,6 +166,23 @@ where getBlockM (bs : TSyntax ``imp_block): ImpLangM (Option Statement) :=
     getStatementM s
   | _ => throwUnsupportedSyntax
 
+
+elab "#run_stat" s:imp_statement "go" : command  =>
+  Command.liftTermElabM do
+  let (_, m) ← runStatementM s |>.run {}
+  logInfo m!"Final variable state: {m.toList}"
+
+
+#run_stat
+  n := 3; m := 4;
+  if (2 ≤ n) {n := 5;} else {n := 2; m := 7;} go
+
+#run_stat
+  n := 10; sum := 0;
+  i := 1;
+  while (i ≤ n) {sum := sum + i; i := i + 1;} go
+
+
 elab "bool%" b:bool_exp ";" : term => do
   let bVal ← getBoolM b |>.run' {}
   return toExpr bVal
@@ -147,10 +195,28 @@ elab "bool%" b:bool_exp ";" : term => do
 
 #eval bool% 3 ≤ 2 ;
 
-elab "imp%" s:imp_statement : term  => do
+elab "imp_stat%" s:imp_statement : term  => do
   let (stat, m) ← getStatementM s |>.run {}
   logInfo m!"Final variable state: {m.toList}"
   return toExpr stat
 
-#eval imp% n := 3; m := 4;
+#eval imp_stat% n := 3; m := 4;
   if (2 ≤ n) {} else {n := 2;}
+
+#eval 1 + 2
+
+#check withLetDecl
+
+elab "checklet" t:term : term => do
+  withLetDecl `n (mkConst ``Nat) (mkConst ``Nat.zero) fun n' => do
+    let e ← elabTerm t none
+    logInfo e
+    let e' ← mkLambdaFVars #[n'] e
+    let v ←
+      unsafe evalExpr Nat (mkConst ``Nat) (← reduce e')
+    logInfo m!"value: {v}; {e'}"
+    return mkConst ``Nat.zero
+
+#eval checklet (n + 1)
+
+#check mkLetFVars
