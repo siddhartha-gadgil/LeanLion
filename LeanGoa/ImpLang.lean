@@ -101,6 +101,7 @@ partial def getBoolM : TSyntax `bool_exp → ImpLangM Bool
 | `(bool_exp| ($b)) => getBoolM b
 | _ => throwUnsupportedSyntax
 
+-- Side effects not controlled. Only for testing.
 partial def getStatementM :
   TSyntax `imp_statement → ImpLangM Statement
 | `(imp_statement| {}) => return .block (none)
@@ -113,7 +114,9 @@ partial def getStatementM :
   return .pair stat₁ stat₂
 | `(imp_statement| $name:ident := $val ;) => do
   let value ← getIntM val
-  return .assignment name.getId value
+  let n := name.getId
+  setVar n value
+  return .assignment n value
 | `(imp_statement| if ($p) $t else $e) => do
   let c ← getBoolM p
   let then_block ← getBlockM t
@@ -127,7 +130,9 @@ partial def getStatementM :
 where getBlockM (bs : TSyntax ``imp_block): ImpLangM (Option Statement) :=
   match bs with
   | `(imp_block| {}) => return none
-  | `(imp_block| {$s}) => getStatementM s
+  | `(imp_block| {$s}) =>
+    -- Error: will give side-effects on all branches
+    getStatementM s
   | _ => throwUnsupportedSyntax
 
 elab "bool%" b:bool_exp ";" : term => do
@@ -143,8 +148,9 @@ elab "bool%" b:bool_exp ";" : term => do
 #eval bool% 3 ≤ 2 ;
 
 elab "imp%" s:imp_statement : term  => do
-  let stat ← getStatementM s |>.run' {}
+  let (stat, m) ← getStatementM s |>.run {}
+  logInfo m!"Final variable state: {m.toList}"
   return toExpr stat
 
 #eval imp% n := 3; m := 4;
-  if (2 ≤ 3) {} else {n := 2;}
+  if (2 ≤ n) {} else {n := 2;}
