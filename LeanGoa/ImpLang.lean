@@ -28,13 +28,13 @@ partial def getNatM (e: Expr) : MetaM Nat := do
       let pred ← getNatM n
       return pred + 1
     else
-      throwError s!"Expression {e} is not a natural number"
+      throwError s!"Expression {← ppExpr e} is not a natural number"
 
 def getNatRelVarsM (vars: List (Name × Nat))
   (t: Syntax.Term) : TermElabM Nat := do
   match vars with
   | [] =>
-    let e ← elabTerm t none
+    let e ← elabTermEnsuringType t (mkConst ``Nat)
     getNatM e
   | (n, val) :: tail =>
     withLetDecl n (mkConst ``Nat) (toExpr val)
@@ -45,7 +45,7 @@ elab "get_nat%" t:term : term => do
   let n ← getNatM e
   return toExpr n
 
-#eval get_nat% 3 * 5
+#eval get_nat% 4 * 5
 
 elab "get_nat_rel_n%" t:term : term => do
   let n ← getNatRelVarsM [(`n, 3)] t
@@ -54,6 +54,26 @@ elab "get_nat_rel_n%" t:term : term => do
 #eval get_nat% 3 * 5
 
 #eval get_nat_rel_n% (3 * 5 + n)
+
+def getBoolM (e: Expr) : MetaM Bool := do
+  if ← isDefEq e (mkConst ``Bool.false)
+    then return false
+  else
+    if ← isDefEq e (mkConst ``Bool.true)
+    then
+      return true
+    else
+      throwError s!"Expression {← ppExpr e} is not a boolean"
+
+def getBoolRelVarsM (vars: List (Name × Nat))
+  (t: Syntax.Term) : TermElabM Bool := do
+  match vars with
+  | [] =>
+    let e ← elabTermEnsuringType t (mkConst ``Bool)
+    getBoolM e
+  | (n, val) :: tail =>
+    withLetDecl n (mkConst ``Bool) (toExpr val)
+      fun _ => getBoolRelVarsM tail t
 
 
 namespace ImpLang
@@ -76,7 +96,7 @@ syntax ident : arith_exp
 syntax arith_exp "+" arith_exp : arith_exp
 syntax arith_exp "/" arith_exp : arith_exp
 syntax "(" arith_exp ")" : arith_exp
-syntax "("term ")" : arith_exp -- for testing
+syntax "[" term "]" : arith_exp -- for testing
 
 declare_syntax_cat bool_exp
 syntax "T" : bool_exp
@@ -111,6 +131,9 @@ deriving Repr, Inhabited, ToExpr
 
 partial def getIntM : TSyntax `arith_exp → ImpLangM Int
 | `(arith_exp| ($e:arith_exp)) => getIntM e
+| `(arith_exp| [$e:term]) => do
+  let m ← get
+  getNatRelVarsM (m.toList.map (fun (k, v) => (k, v.toNat))) e
 | `(arith_exp| $n:num) => return n.getNat
 | `(arith_exp| $a:arith_exp + $b:arith_exp) => do
   let aInt ← getIntM a
@@ -214,8 +237,8 @@ elab "#run_stat" s:imp_statement "go" : command  =>
 
 
 #run_stat
-  n := 3; m := 4;
-  if (2 ≤ n) {n := 5;} else {n := 2; m := 7;}
+  n := 3; m := 4 + 5;
+  if (2 ≤ n) {n := (5 + 3 + [2 * 7]);} else {n := 2; m := 7;}
   go
 
 #run_stat
