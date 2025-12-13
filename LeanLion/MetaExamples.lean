@@ -256,7 +256,7 @@ Our next example is a macro, but a more complex one. Suppose we want to handle n
 
 In general, the innermost `for` is resolved to a `List.map`, and the all the outer `for`s are resolved to a `List.bind`.
 -/
-#check List.bind -- List.bind.{u, v} {α : Type u} {β : Type v} (a : List α) (b : α → List β) : List β
+#check List.flatMap -- List.bind.{u, v} {α : Type u} {β : Type v} (a : List α) (b : α → List β) : List β
 
 declare_syntax_cat python_for
 syntax "for#" ident "in" term : python_for
@@ -273,7 +273,7 @@ macro_rules
   let init ← `([ $y:term $ls:python_for* ])
   match l with
   | `(python_for| for# $x:ident in $l) => do
-    `(List.bind $l (fun $x => $init))
+    `(List.flatMap (fun $x => $init) $l)
   | _ => Macro.throwUnsupported
 
 #eval [x * x for# x in [1, 2, 3, 4, 5]]

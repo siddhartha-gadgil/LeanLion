@@ -17,6 +17,45 @@ open Lean Meta Elab Term
 - When we run a program, we only change state
 - We can drop the requirement of declaration in advance, so we just have statements.
 -/
+partial def getNatM (e: Expr) : MetaM Nat := do
+  if ← isDefEq e (mkConst ``Nat.zero)
+    then return 0
+  else
+    let n ← mkFreshExprMVar (mkConst ``Nat)
+    let nSucc ← mkAppM ``Nat.succ #[n]
+    if ← isDefEq e nSucc
+    then
+      let pred ← getNatM n
+      return pred + 1
+    else
+      throwError s!"Expression {e} is not a natural number"
+
+def getNatRelVarsM (vars: List (Name × Nat))
+  (t: Syntax.Term) : TermElabM Nat := do
+  match vars with
+  | [] =>
+    let e ← elabTerm t none
+    getNatM e
+  | (n, val) :: tail =>
+    withLetDecl n (mkConst ``Nat) (toExpr val)
+      fun _ => getNatRelVarsM tail t
+
+elab "get_nat%" t:term : term => do
+  let e ← elabTerm t (mkConst ``Nat)
+  let n ← getNatM e
+  return toExpr n
+
+#eval get_nat% 3 * 5
+
+elab "get_nat_rel_n%" t:term : term => do
+  let n ← getNatRelVarsM [(`n, 3)] t
+  return toExpr n
+
+#eval get_nat% 3 * 5
+
+#eval get_nat_rel_n% (3 * 5 + n)
+
+
 namespace ImpLang
 
 -- variables with name
@@ -37,6 +76,7 @@ syntax ident : arith_exp
 syntax arith_exp "+" arith_exp : arith_exp
 syntax arith_exp "/" arith_exp : arith_exp
 syntax "(" arith_exp ")" : arith_exp
+syntax "("term ")" : arith_exp -- for testing
 
 declare_syntax_cat bool_exp
 syntax "T" : bool_exp
@@ -70,7 +110,7 @@ inductive Statement where
 deriving Repr, Inhabited, ToExpr
 
 partial def getIntM : TSyntax `arith_exp → ImpLangM Int
-| `(arith_exp| ($e)) => getIntM e
+| `(arith_exp| ($e:arith_exp)) => getIntM e
 | `(arith_exp| $n:num) => return n.getNat
 | `(arith_exp| $a:arith_exp + $b:arith_exp) => do
   let aInt ← getIntM a
@@ -175,7 +215,8 @@ elab "#run_stat" s:imp_statement "go" : command  =>
 
 #run_stat
   n := 3; m := 4;
-  if (2 ≤ n) {n := 5;} else {n := 2; m := 7;} go
+  if (2 ≤ n) {n := 5;} else {n := 2; m := 7;}
+  go
 
 #run_stat
   n := 10; sum := 0;
@@ -208,15 +249,14 @@ elab "imp_stat%" s:imp_statement : term  => do
 #check withLetDecl
 
 elab "checklet" t:term : term => do
-  withLetDecl `n (mkConst ``Nat) (mkConst ``Nat.zero) fun n' => do
+  withLetDecl `n (mkConst ``Nat) (mkConst ``Nat.zero) fun _ => do
     let e ← elabTerm t none
     logInfo e
-    let e' ← mkLambdaFVars #[n'] e
     let v ←
-      unsafe evalExpr Nat (mkConst ``Nat) (← reduce e')
-    logInfo m!"value: {v}; {e'}"
+      getNatM e
+    logInfo m!"value: {v};"
     return mkConst ``Nat.zero
 
-#eval checklet (n + 1)
+#eval checklet (n + 3)
 
 #check mkLetFVars
