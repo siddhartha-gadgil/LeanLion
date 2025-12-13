@@ -50,6 +50,13 @@ def getBoolRelVarsM (vars: List (Name × Nat))
   Term.synthesizeSyntheticMVarsNoPostponing
   unsafe evalExpr Bool (mkConst ``Bool) e
 
+def getStrRelVarsM (vars: List (Name × Nat))
+  (t: Syntax.Term) : TermElabM String := do
+  let stx ← exprRelVars vars t
+  let e ← elabTermEnsuringType stx (mkConst ``String)
+  Term.synthesizeSyntheticMVarsNoPostponing
+  unsafe evalExpr String (mkConst ``String) e
+
 namespace ImpLang
 
 -- variables with name
@@ -75,29 +82,27 @@ def getBoolInCtxM (stx: Syntax.Term) : ImpLangM Bool := do
 
 declare_syntax_cat imp_statement
 
-syntax imp_block := "{" (imp_statement)? "}"
+syntax imp_block := "{" sepBy(imp_statement, ";", ";", allowTrailingSep) "}"
+
+syntax imp_program := sepBy(imp_statement, ";", ";", allowTrailingSep)
 
 syntax imp_block : imp_statement
 
-syntax imp_statement imp_statement : imp_statement
-
-syntax ident ":=" term ";" : imp_statement
+syntax ident ":=" term : imp_statement
 
 syntax "if" ppSpace "(" term ")" ppSpace imp_block "else" imp_block : imp_statement
 
 syntax "while" "(" term ")" ppSpace imp_block : imp_statement
 
-syntax "print" str ";" : imp_statement
+syntax "print" term  : imp_statement
 
 partial def runStatementM :
   TSyntax `imp_statement → ImpLangM Unit
-| `(imp_statement| {}) => return
-| `(imp_statement| {$s}) => do
-    runStatementM s
-| `(imp_statement| $s₁ $s₂) => do
-  runStatementM s₁
-  runStatementM s₂
-| `(imp_statement| $name:ident := $val ;) => do
+| `(imp_statement| {$s;*}) => do
+    let stmts := s.getElems
+    for stmt in stmts do
+      runStatementM stmt
+| `(imp_statement| $name:ident := $val) => do
   let value ← getNatInCtxM val
   let n := name.getId
   setVar n value
@@ -111,48 +116,59 @@ partial def runStatementM :
   if c then
     runBlockM b
     runStatementM w
-| `(imp_statement| print $s:str ;) => do
+| stat@`(imp_statement| print $s) => do
   let m ← get
-  logInfo m!"Print: {s.getString}, State: {m.toList}"
+  let str ← getStrRelVarsM m.toList s
+  logInfoAt stat str
 | _ => throwUnsupportedSyntax
 where runBlockM (bs : TSyntax ``imp_block): ImpLangM Unit :=
   match bs with
   | `(imp_block| {}) => return
-  | `(imp_block| {$s}) =>
-    runStatementM s
+  | `(imp_block| {$s;*}) =>
+    let stmts := s.getElems
+    for stmt in stmts do
+      runStatementM stmt
   | _ => throwUnsupportedSyntax
 
-elab "#run_stat" s:imp_statement "go" : command  =>
+def runProgramM (pgm: TSyntax ``imp_program) : ImpLangM Unit := do
+  match pgm with
+  | `(imp_program| $s;*) =>
+    let stmts := s.getElems
+    for stmt in stmts do
+      runStatementM stmt
+  | _ => throwUnsupportedSyntax
+
+elab "##run_imp" ss:imp_program r:"return" : command  =>
   Command.liftTermElabM do
-  let (_, m) ← runStatementM s |>.run {}
-  logInfo m!"Final variable state: {m.toList}"
+  let (_, m) ← runProgramM ss |>.run {}
+  logInfoAt r m!"Final variable state: {m.toList}"
 
 
-#run_stat
+##run_imp
   n := 3; m := 4 + 5;
-  if (n ≤ 4) {n := (5 + 3 + (2 * 7));} else {n := 2; m := 7;}
-  go
+  if (n ≤ 4) {n := (5 + 3 + (2 * 7));} else {n := 2; m := 7}
+  return
 
-#run_stat
+##run_imp
   n := 10; sum := 0;
   i := 1;
-  while (i ≤ n) {sum := sum + i; i := i + 1;} go
+  while (i ≤ n) {sum := sum + i; i := i + 1} return
 
-#run_stat
+##run_imp
   n := 59;
   i := 2;
   is_prime := 1;
-  while (i < n) {
+  while (i < n && is_prime = 1) {
     if (i ∣ n) {
-      is_prime := 0;
-    } else {}
-    i := i + 1;
-  }
+      is_prime := 0
+    } else {};
+    i := i + 1
+  };
   if (is_prime = 1) {
-    print "n is prime";
+    print s!"{n} is prime"
   } else {
-    print "n is not prime";
+    print s!"{n} is not prime; divisor: {i - 1}"
   }
-  go
+  return
 
 end ImpLang
